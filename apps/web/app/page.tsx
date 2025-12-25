@@ -12,6 +12,12 @@ const DIFF_LIMIT = 2000;
 const formatBytes = (bytes: number) =>
   `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 
+const modeDescriptions: Record<ScrubMode, string> = {
+  redact: "Irreversible replacement like [EMAIL_REDACTED]. Best for sharing.",
+  "token-map": "Stable tokens plus a mapping file that can restore originals.",
+  hash: "Salted SHA-256 digests for linkable, non-reversible IDs."
+};
+
 export default function HomePage() {
   const workerRef = useRef<Worker | null>(null);
   const [inputText, setInputText] = useState("");
@@ -27,6 +33,20 @@ export default function HomePage() {
   const [busy, setBusy] = useState(false);
   const [diffView, setDiffView] = useState(false);
   const [fileLabel, setFileLabel] = useState<string | null>(null);
+
+  const generateSalt = () => {
+    setMessage(null);
+    if (typeof crypto === "undefined" || typeof crypto.getRandomValues !== "function") {
+      setMessage("Random salt not supported in this browser.");
+      return;
+    }
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    const hex = Array.from(bytes)
+      .map((value) => value.toString(16).padStart(2, "0"))
+      .join("");
+    setHashSalt(hex);
+  };
 
   useEffect(() => {
     const worker = new Worker(
@@ -181,59 +201,83 @@ export default function HomePage() {
             </p>
           </header>
 
+          <section className="rounded-3xl border border-[var(--panel-border)] bg-[var(--panel)] p-4 text-xs text-slate shadow-soft animate-rise">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-ink">How to use</h2>
+              <span className="rounded-full border border-[var(--panel-border)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate">
+                60 seconds
+              </span>
+            </div>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl bg-[#fbfaf7] p-4">
+                <p className="text-ink font-semibold">1. Input</p>
+                <p className="mt-1">Paste text or drop a log/JSON file.</p>
+              </div>
+              <div className="rounded-2xl bg-[#fbfaf7] p-4">
+                <p className="text-ink font-semibold">2. Choose mode</p>
+                <p className="mt-1">Pick redact, token-map, or salted hash.</p>
+              </div>
+              <div className="rounded-2xl bg-[#fbfaf7] p-4">
+                <p className="text-ink font-semibold">3. Scrub + download</p>
+                <p className="mt-1">Review output, then export the results.</p>
+              </div>
+            </div>
+          </section>
+
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <section
-              className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise"
-              onDrop={onDrop}
-              onDragOver={(event) => event.preventDefault()}
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-semibold">Input</h2>
-                  <p className="text-sm text-slate">
-                    Drag a .txt/.log/.json file here or paste directly.
-                  </p>
+            <div className="flex flex-col gap-6">
+              <section
+                className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise"
+                onDrop={onDrop}
+                onDragOver={(event) => event.preventDefault()}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-semibold">Input</h2>
+                    <p className="text-sm text-slate">
+                      Drag a .txt/.log/.json file here or paste directly.
+                    </p>
+                  </div>
+                  <label className="text-sm font-semibold text-ink">
+                    <span className="px-3 py-2 border border-dashed border-slate rounded-full cursor-pointer hover:border-ink transition">
+                      Browse
+                    </span>
+                    <input
+                      type="file"
+                      accept=".txt,.log,.json"
+                      className="hidden"
+                      onChange={onBrowse}
+                    />
+                  </label>
                 </div>
-                <label className="text-sm font-semibold text-ink">
-                  <span className="px-3 py-2 border border-dashed border-slate rounded-full cursor-pointer hover:border-ink transition">
-                    Browse
-                  </span>
-                  <input
-                    type="file"
-                    accept=".txt,.log,.json"
-                    className="hidden"
-                    onChange={onBrowse}
-                  />
-                </label>
-              </div>
 
-              <textarea
-                className="mt-4 w-full min-h-[260px] rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                placeholder="Paste logs, JSON, or text here..."
-                value={inputText}
-                onChange={(event) => setInputText(event.target.value)}
-              />
+                <textarea
+                  className="mt-4 w-full min-h-[260px] rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  placeholder="Paste logs, JSON, or text here..."
+                  value={inputText}
+                  onChange={(event) => setInputText(event.target.value)}
+                />
 
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate">
-                <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
-                  {inputText.length.toLocaleString()} chars
-                </span>
-                {fileLabel ? (
+                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate">
                   <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
-                    {fileLabel}
+                    {inputText.length.toLocaleString()} chars
                   </span>
-                ) : null}
-                {warning ? (
-                  <span className="px-3 py-1 rounded-full border border-[var(--panel-border)] text-amber-700">
-                    {warning}
-                  </span>
-                ) : null}
-              </div>
-            </section>
+                  {fileLabel ? (
+                    <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
+                      {fileLabel}
+                    </span>
+                  ) : null}
+                  {warning ? (
+                    <span className="px-3 py-1 rounded-full border border-[var(--panel-border)] text-amber-700">
+                      {warning}
+                    </span>
+                  ) : null}
+                </div>
+              </section>
 
-            <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
-              <h2 className="text-xl font-semibold">Scrub Options</h2>
-              <div className="mt-4 grid gap-4">
+              <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
+                <h2 className="text-xl font-semibold">Scrub Options</h2>
+                <div className="mt-4 grid gap-4">
                 <label className="text-sm font-semibold text-slate">
                   Mode
                   <select
@@ -245,6 +289,9 @@ export default function HomePage() {
                     <option value="token-map">Token map</option>
                     <option value="hash">Hash (salted)</option>
                   </select>
+                  <p className="mt-2 text-xs font-normal text-slate">
+                    {modeDescriptions[mode]}
+                  </p>
                 </label>
 
                 <label className="text-sm font-semibold text-slate">
@@ -269,16 +316,31 @@ export default function HomePage() {
                 </label>
 
                 {mode === "hash" ? (
-                  <label className="text-sm font-semibold text-slate">
-                    Hash salt (never persisted)
-                    <input
-                      type="text"
-                      value={hashSalt}
-                      onChange={(event) => setHashSalt(event.target.value)}
-                      className="mt-2 w-full rounded-2xl border border-[var(--panel-border)] bg-white p-2 text-sm"
-                      placeholder="Enter a salt..."
-                    />
-                  </label>
+                  <div className="text-sm font-semibold text-slate">
+                    <label className="text-sm font-semibold text-slate">
+                      Hash salt (never persisted)
+                      <input
+                        type="text"
+                        value={hashSalt}
+                        onChange={(event) => setHashSalt(event.target.value)}
+                        className="mt-2 w-full rounded-2xl border border-[var(--panel-border)] bg-white p-2 text-sm"
+                        placeholder="Enter a private salt..."
+                      />
+                    </label>
+                    <p className="mt-2 text-xs font-normal text-slate">
+                      Use a private phrase you can reuse for consistent hashing. For a one-off scrub,
+                      generate a random salt.
+                    </p>
+                    <div className="mt-2">
+                      <button
+                        type="button"
+                        onClick={generateSalt}
+                        className="rounded-full border border-[var(--panel-border)] px-4 py-1 text-[11px] font-semibold text-slate hover:border-ink transition"
+                      >
+                        Generate random salt
+                      </button>
+                    </div>
+                  </div>
                 ) : null}
 
                 <div className="flex flex-wrap gap-3">
@@ -303,20 +365,36 @@ export default function HomePage() {
                   <p className="text-sm text-rose-700">{message}</p>
                 ) : null}
 
-                <div className="mt-4 rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4 text-xs text-slate">
-                  <p className="text-sm font-semibold text-ink">Mode guide</p>
+                </div>
+              </section>
+            </div>
+
+            <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
+              <h2 className="text-xl font-semibold">Guidance</h2>
+              <div className="mt-4 space-y-4 text-xs text-slate">
+                <div className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
+                  <p className="text-sm font-semibold text-ink">How it works</p>
                   <p className="mt-2">
-                    Redact replaces matches with [TYPE_REDACTED] and is irreversible.
+                    Detection is deterministic (regex + validation + entropy), running locally in a Web Worker.
                   </p>
                   <p className="mt-2">
-                    Token-map swaps matches for stable tokens like [[EMAIL:1]] and writes a mapping file
-                    you must protect.
+                    Token-map writes a sensitive mapping.jsonl file that can restore originals.
                   </p>
                   <p className="mt-2">
-                    Hash uses your salt to create TYPE_SHA256 digests; same input + salt gives the same output.
+                    Hash mode uses your salt for linkable identifiers; salt is never stored.
                   </p>
-                  <p className="mt-3">
-                    Privacy: all work stays in your browser via a Web Worker. No uploads, no telemetry.
+                </div>
+                <div className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
+                  <p className="text-sm font-semibold text-ink">Privacy + safety</p>
+                  <p className="mt-2">Everything stays in your browser. No uploads. No telemetry.</p>
+                  <p className="mt-2">
+                    If you generate mapping.jsonl, store it securely and encrypt before sharing.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
+                  <p className="text-sm font-semibold text-ink">Tips</p>
+                  <p className="mt-2">
+                    For high confidence only, keep Aggressive off. Use Keep Last for partial visibility.
                   </p>
                 </div>
               </div>
@@ -339,6 +417,13 @@ export default function HomePage() {
                   Diff view
                 </label>
               </div>
+
+              {mode === "token-map" ? (
+                <div className="mt-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+                  Token-map creates a mapping.jsonl file with the original values. Download and store it
+                  securely if you need to restore data later.
+                </div>
+              ) : null}
 
               {!diffView ? (
                 <textarea
@@ -409,12 +494,6 @@ export default function HomePage() {
                   </button>
                 ) : null}
               </div>
-
-              {mode === "token-map" && mappingJsonl ? (
-                <div className="mt-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-                  mapping.jsonl contains sensitive data. Store it securely and encrypt before sharing.
-                </div>
-              ) : null}
             </div>
 
             <aside className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft">

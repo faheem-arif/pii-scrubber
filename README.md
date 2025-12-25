@@ -2,7 +2,9 @@
 
 Scrub sensitive data entirely in your browser. No uploads, no telemetry, no analytics.
 
-## 60-second demo
+Live demo: https://faheem-arif.github.io/pii-scrubber/
+
+## Setup Guide
 
 1) Install deps: `pnpm install`
 2) Run the web app: `pnpm --filter @pii-scrubber/web dev`
