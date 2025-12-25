@@ -1,0 +1,8 @@
+User [[EMAIL:1]] logged in from [[IPV4:1]] and [[IPV6:1]].
+Session [[UUID:1]]
+Basic auth: [[URL_BASIC_AUTH:1]]
+JWT: [[JWT:1]]
+AWS key: [[AWS_ACCESS_KEY:1]]
+GitHub token: [[GITHUB_TOKEN:1]]
+Secret token=[[GENERIC_SECRET:1]]
+[[PRIVATE_KEY:1]]

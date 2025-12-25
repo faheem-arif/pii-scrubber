@@ -1,0 +1,10 @@
+{"token":"EMAIL:1","type":"email","original":"john.doe@corp.com","sha256":"0d02df3dcb2260c466f7b96f2d4c8a76642242556923a362b19efcd4d040a07f","firstSeen":"2025-12-25T12:34:56Z"}
+{"token":"IPV4:1","type":"ipv4","original":"192.168.1.10","sha256":"805ebf201c523f69376591c6ce5ceb3f12ebcfedad297c5f175a380426cf0b42","firstSeen":"2025-12-25T12:34:56Z"}
+{"token":"IPV6:1","type":"ipv6","original":"2001:0db8:85a3:0000:0000:8a2e:0370:7334","sha256":"50467266fc4130a643e02b8b147bb17d7ea773c3eba2db98db77fff826143192","firstSeen":"2025-12-25T12:34:56Z"}
+{"token":"UUID:1","type":"uuid","original":"550e8400-e29b-41d4-a716-446655440000","sha256":"a3a9e1ed9732cab28868127be00f1ce921acaefdd5c3b23a6e9e0072bd9c1a34","firstSeen":"2025-12-25T12:34:56Z"}
+{"token":"URL_BASIC_AUTH:1","type":"url_basic_auth","original":"https://user:pass@example.com/path","sha256":"99eb9ed8fbe0d87c42f815c9518c6191839cb5217fd63cde6575ffd2c4d0a03c","firstSeen":"2025-12-25T12:34:56Z"}
+{"token":"JWT:1","type":"jwt","original":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c","sha256":"4a2fef3db7a268dbc78dec449fa04e28a6e1adafc9f7fc1c1bd0623c9f026965","firstSeen":"2025-12-25T12:34:56Z"}
+{"token":"AWS_ACCESS_KEY:1","type":"aws_access_key","original":"AKIAIOSFODNN7EXAMPLE","sha256":"1a5d44a2dca19669d72edf4c4f1c27c4c1ca4b4408fbb17f6ce4ad452d78ddb3","firstSeen":"2025-12-25T12:34:56Z"}
+{"token":"GITHUB_TOKEN:1","type":"github_token","original":"ghp_1234567890abcdef1234567890abcdef1234","sha256":"8841c2397d5af2017f16d8f94da2d34ce7e25b4992bbf8dadc4fef13b06e410e","firstSeen":"2025-12-25T12:34:56Z"}
+{"token":"GENERIC_SECRET:1","type":"generic_secret","original":"sk_live_51H8XyZp2Qd3MNx6y7a8b9c0d1e2f3g4","sha256":"309e91cdd84bd4521121c347a9c90845800a3def8c902f6fcec60fa8725c0e83","firstSeen":"2025-12-25T12:34:56Z"}
+{"token":"PRIVATE_KEY:1","type":"private_key","original":"-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----","sha256":"2d22b3aee5c0aecda940340a7b05313af2c369b36246461c99f14e56c5c948f7","firstSeen":"2025-12-25T12:34:56Z"}

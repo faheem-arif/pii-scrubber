@@ -1,0 +1,10 @@
+User john.doe@corp.com logged in from 192.168.1.10 and 2001:0db8:85a3:0000:0000:8a2e:0370:7334.
+Session 550e8400-e29b-41d4-a716-446655440000
+Basic auth: https://user:pass@example.com/path
+JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+AWS key: AKIAIOSFODNN7EXAMPLE
+GitHub token: ghp_1234567890abcdef1234567890abcdef1234
+Secret token=sk_live_51H8XyZp2Qd3MNx6y7a8b9c0d1e2f3g4
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASC
+-----END PRIVATE KEY-----
