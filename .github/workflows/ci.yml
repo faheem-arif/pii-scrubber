@@ -14,7 +14,7 @@ jobs:
           node-version: "20"
           cache: "pnpm"
       - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm -w lint
-      - run: pnpm -w test
-      - run: pnpm -w build
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm -w lint
+      - run: corepack pnpm -w test
+      - run: corepack pnpm -w build
