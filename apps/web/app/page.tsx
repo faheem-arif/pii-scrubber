@@ -12,6 +12,14 @@ const DIFF_LIMIT = 2000;
 const formatBytes = (bytes: number) =>
   `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 
+const EXAMPLE_TEXT = `User john.doe@corp.com logged in from 192.168.1.10.
+JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+AWS key: AKIAIOSFODNN7EXAMPLE
+Secret token=sk_live_51H8XyZp2Qd3MNx6y7a8b9c0d1e2f3g4`;
+
+const secondaryButtonClass =
+  "rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-4 py-2 text-xs font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition";
+
 const modeDescriptions: Record<ScrubMode, string> = {
   redact: "Irreversible replacement like [EMAIL_REDACTED]. Best for sharing.",
   "token-map": "Stable tokens plus a mapping file that can restore originals.",
@@ -33,6 +41,7 @@ export default function HomePage() {
   const [busy, setBusy] = useState(false);
   const [diffView, setDiffView] = useState(false);
   const [fileLabel, setFileLabel] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const generateSalt = () => {
     setMessage(null);
@@ -63,6 +72,8 @@ export default function HomePage() {
         setOutputText(data.result.scrubbedText);
         setReport(data.result.report);
         setMappingJsonl(data.result.mappingJsonl ?? null);
+        const count = data.result.report.totalFindings;
+        setToastMessage(`${count} finding${count === 1 ? "" : "s"} scrubbed`);
       } else {
         setMessage(data.error);
       }
@@ -78,6 +89,14 @@ export default function HomePage() {
       worker.terminate();
     };
   }, []);
+
+  useEffect(() => {
+    if (!toastMessage) {
+      return;
+    }
+    const timer = setTimeout(() => setToastMessage(null), 2500);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   const diffRows = useMemo(() => {
     if (!diffView) {
@@ -160,6 +179,32 @@ export default function HomePage() {
     setFileLabel(null);
   };
 
+  const loadExample = () => {
+    setMessage(null);
+    setWarning(null);
+    setFileLabel("Example data");
+    setInputText(EXAMPLE_TEXT);
+    setOutputText("");
+    setReport(null);
+    setMappingJsonl(null);
+  };
+
+  const copyOutput = async () => {
+    if (!outputText) {
+      return;
+    }
+    if (!navigator.clipboard?.writeText) {
+      setMessage("Clipboard not available in this browser.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(outputText);
+      setToastMessage("Output copied");
+    } catch {
+      setMessage("Failed to copy output.");
+    }
+  };
+
   const downloadReport = () => {
     if (!report) {
       return;
@@ -223,7 +268,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          <div className="flex flex-col gap-6">
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <section
               className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise"
               onDrop={onDrop}
@@ -231,22 +276,31 @@ export default function HomePage() {
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold">Input</h2>
+                  <h2 className="text-xl font-semibold">1. Input</h2>
                   <p className="text-sm text-slate">
                     Drag a .txt/.log/.json file here or paste directly.
                   </p>
                 </div>
-                <label className="text-sm font-semibold text-ink">
-                  <span className="px-4 py-2 rounded-full cursor-pointer bg-[var(--accent)] text-ink shadow-soft hover:bg-[var(--accent-dark)] transition">
-                    Browse
-                  </span>
-                  <input
-                    type="file"
-                    accept=".txt,.log,.json"
-                    className="hidden"
-                    onChange={onBrowse}
-                  />
-                </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={loadExample}
+                    className={secondaryButtonClass}
+                  >
+                    Use example
+                  </button>
+                  <label className="text-sm font-semibold text-ink">
+                    <span className="px-4 py-2 rounded-full cursor-pointer bg-[var(--accent)] text-ink shadow-soft hover:bg-[var(--accent-dark)] transition">
+                      Browse
+                    </span>
+                    <input
+                      type="file"
+                      accept=".txt,.log,.json"
+                      className="hidden"
+                      onChange={onBrowse}
+                    />
+                  </label>
+                </div>
               </div>
 
               <textarea
@@ -274,7 +328,7 @@ export default function HomePage() {
             </section>
 
             <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
-              <h2 className="text-xl font-semibold">Scrub Options</h2>
+              <h2 className="text-xl font-semibold">2. Scrub Options</h2>
               <div className="mt-4 grid gap-4">
                 <label className="text-sm font-semibold text-slate">
                   Mode
@@ -336,7 +390,7 @@ export default function HomePage() {
                       <button
                         type="button"
                         onClick={generateSalt}
-                        className="rounded-full border border-[var(--panel-border)] px-4 py-1 text-[11px] font-semibold text-slate hover:border-ink transition"
+                        className="rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-4 py-1 text-[11px] font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition"
                       >
                         Generate random salt
                       </button>
@@ -356,7 +410,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={resetAll}
-                    className="rounded-full border border-[var(--panel-border)] px-5 py-2 text-sm font-semibold text-slate hover:border-ink transition"
+                    className="rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-5 py-2 text-sm font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition"
                   >
                     Clear
                   </button>
@@ -374,7 +428,7 @@ export default function HomePage() {
             <div className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold">Output</h2>
+                  <h2 className="text-xl font-semibold">3. Output</h2>
                   <p className="text-sm text-slate">Review and export scrubbed results.</p>
                 </div>
                 <label className="flex items-center gap-2 text-sm text-slate">
@@ -439,15 +493,23 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={downloadOutput}
-                  className="rounded-full border border-[var(--panel-border)] px-4 py-2 text-xs font-semibold text-slate hover:border-ink transition"
+                  className={secondaryButtonClass}
                   disabled={!outputText}
                 >
                   Download scrubbed
                 </button>
                 <button
                   type="button"
+                  onClick={copyOutput}
+                  className={secondaryButtonClass}
+                  disabled={!outputText}
+                >
+                  Copy output
+                </button>
+                <button
+                  type="button"
                   onClick={downloadReport}
-                  className="rounded-full border border-[var(--panel-border)] px-4 py-2 text-xs font-semibold text-slate hover:border-ink transition"
+                  className={secondaryButtonClass}
                   disabled={!report}
                 >
                   Download report.json
@@ -456,7 +518,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={downloadMapping}
-                    className="rounded-full border border-[var(--panel-border)] px-4 py-2 text-xs font-semibold text-slate hover:border-ink transition"
+                    className={secondaryButtonClass}
                     disabled={!mappingJsonl}
                   >
                     Download mapping.jsonl
@@ -498,6 +560,11 @@ export default function HomePage() {
           </section>
         </div>
       </section>
+      {toastMessage ? (
+        <div className="fixed bottom-6 right-6 z-50 rounded-full bg-ink px-4 py-2 text-xs font-semibold text-fog shadow-soft">
+          {toastMessage}
+        </div>
+      ) : null}
     </main>
   );
 }
