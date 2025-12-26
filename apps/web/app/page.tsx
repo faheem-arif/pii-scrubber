@@ -191,7 +191,9 @@ export default function HomePage() {
       <section className="max-w-6xl mx-auto">
         <div className="flex flex-col gap-6">
           <header className="flex flex-col gap-3 animate-rise">
-            <p className="uppercase tracking-[0.3em] text-xs text-slate">Local-First Scrubber</p>
+            <p className="uppercase tracking-[0.3em] text-xs text-slate">
+              Local-only — nothing leaves your browser
+            </p>
             <h1 className="text-4xl md:text-5xl font-semibold text-ink">
               PII + Secret Scrubber
             </h1>
@@ -221,60 +223,59 @@ export default function HomePage() {
             </div>
           </section>
 
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="flex flex-col gap-6">
-              <section
-                className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise"
-                onDrop={onDrop}
-                onDragOver={(event) => event.preventDefault()}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-xl font-semibold">Input</h2>
-                    <p className="text-sm text-slate">
-                      Drag a .txt/.log/.json file here or paste directly.
-                    </p>
-                  </div>
-                  <label className="text-sm font-semibold text-ink">
-                    <span className="px-3 py-2 border border-dashed border-slate rounded-full cursor-pointer hover:border-ink transition">
-                      Browse
-                    </span>
-                    <input
-                      type="file"
-                      accept=".txt,.log,.json"
-                      className="hidden"
-                      onChange={onBrowse}
-                    />
-                  </label>
+          <div className="flex flex-col gap-6">
+            <section
+              className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise"
+              onDrop={onDrop}
+              onDragOver={(event) => event.preventDefault()}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold">Input</h2>
+                  <p className="text-sm text-slate">
+                    Drag a .txt/.log/.json file here or paste directly.
+                  </p>
                 </div>
-
-                <textarea
-                  className="mt-4 w-full min-h-[260px] rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                  placeholder="Paste logs, JSON, or text here..."
-                  value={inputText}
-                  onChange={(event) => setInputText(event.target.value)}
-                />
-
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate">
-                  <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
-                    {inputText.length.toLocaleString()} chars
+                <label className="text-sm font-semibold text-ink">
+                  <span className="px-3 py-2 border border-dashed border-slate rounded-full cursor-pointer hover:border-ink transition">
+                    Browse
                   </span>
-                  {fileLabel ? (
-                    <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
-                      {fileLabel}
-                    </span>
-                  ) : null}
-                  {warning ? (
-                    <span className="px-3 py-1 rounded-full border border-[var(--panel-border)] text-amber-700">
-                      {warning}
-                    </span>
-                  ) : null}
-                </div>
-              </section>
+                  <input
+                    type="file"
+                    accept=".txt,.log,.json"
+                    className="hidden"
+                    onChange={onBrowse}
+                  />
+                </label>
+              </div>
 
-              <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
-                <h2 className="text-xl font-semibold">Scrub Options</h2>
-                <div className="mt-4 grid gap-4">
+              <textarea
+                className="mt-4 w-full min-h-[260px] rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                placeholder="Paste logs, JSON, or text here..."
+                value={inputText}
+                onChange={(event) => setInputText(event.target.value)}
+              />
+
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate">
+                <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
+                  {inputText.length.toLocaleString()} chars
+                </span>
+                {fileLabel ? (
+                  <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
+                    {fileLabel}
+                  </span>
+                ) : null}
+                {warning ? (
+                  <span className="px-3 py-1 rounded-full border border-[var(--panel-border)] text-amber-700">
+                    {warning}
+                  </span>
+                ) : null}
+              </div>
+            </section>
+
+            <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
+              <h2 className="text-xl font-semibold">Scrub Options</h2>
+              <div className="mt-4 grid gap-4">
                 <label className="text-sm font-semibold text-slate">
                   Mode
                   <select
@@ -301,6 +302,9 @@ export default function HomePage() {
                     onChange={(event) => setKeepLast(Number(event.target.value))}
                     className="mt-2 w-full rounded-2xl border border-[var(--panel-border)] bg-white p-2 text-sm"
                   />
+                  <p className="mt-2 text-xs font-normal text-slate">
+                    Example: set 4 to keep the last 4 characters visible after scrubbing.
+                  </p>
                 </label>
 
                 <label className="flex items-center gap-3 text-sm font-semibold text-slate">
@@ -362,50 +366,6 @@ export default function HomePage() {
                   <p className="text-sm text-rose-700">{message}</p>
                 ) : null}
 
-                </div>
-              </section>
-            </div>
-
-            <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
-              <h2 className="text-xl font-semibold">How it works</h2>
-              <p className="mt-1 text-xs text-slate">
-                Details about detection, privacy, and how your data stays local.
-              </p>
-              <div className="mt-4 space-y-3 text-xs text-slate">
-                <details className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-ink">
-                    Detection pipeline
-                  </summary>
-                  <p className="mt-2">
-                    We use deterministic detection (regex + validation + entropy) in a Web Worker.
-                    Your text never leaves the browser.
-                  </p>
-                  <p className="mt-2">
-                    Replacements happen locally and are applied from end-to-start to preserve offsets.
-                  </p>
-                </details>
-                <details className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-ink">
-                    Privacy + local-only
-                  </summary>
-                  <p className="mt-2">
-                    No uploads, no telemetry, no analytics. This site makes no network calls with your content.
-                  </p>
-                  <p className="mt-2">
-                    If you download mapping.jsonl (token-map), treat it as sensitive and encrypt before sharing.
-                  </p>
-                </details>
-                <details className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-ink">
-                    Mode tips
-                  </summary>
-                  <p className="mt-2">
-                    Keep Aggressive off for higher confidence. Use Keep Last for partial visibility.
-                  </p>
-                  <p className="mt-2">
-                    Hash mode uses your salt for linkable identifiers; the salt is never stored.
-                  </p>
-                </details>
               </div>
             </section>
           </div>
