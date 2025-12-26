@@ -237,7 +237,7 @@ export default function HomePage() {
                   </p>
                 </div>
                 <label className="text-sm font-semibold text-ink">
-                  <span className="px-3 py-2 border border-dashed border-slate rounded-full cursor-pointer hover:border-ink transition">
+                  <span className="px-4 py-2 rounded-full cursor-pointer bg-[var(--accent)] text-ink shadow-soft hover:bg-[var(--accent-dark)] transition">
                     Browse
                   </span>
                   <input
