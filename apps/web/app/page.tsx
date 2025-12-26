@@ -21,8 +21,6 @@ const secondaryButtonClass =
   "rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-4 py-2 text-xs font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition";
 const smallPillClass =
   "inline-flex items-center justify-center rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-3 py-2 text-[11px] font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition";
-const smallPillAccentClass =
-  "inline-flex items-center justify-center rounded-full bg-[var(--accent)] px-3 py-2 text-[11px] font-semibold text-ink shadow-soft hover:bg-[var(--accent-dark)] transition";
 
 const modeDescriptions: Record<ScrubMode, string> = {
   redact: "Irreversible replacement like [EMAIL_REDACTED]. Best for sharing.",
@@ -293,7 +291,7 @@ export default function HomePage() {
                   >
                     Use example
                   </button>
-                  <label className={smallPillAccentClass}>
+                  <label className={smallPillClass}>
                     Browse
                     <input
                       type="file"
