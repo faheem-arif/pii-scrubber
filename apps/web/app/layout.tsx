@@ -1,3 +1,4 @@
+import Link from "next/link";
 import "./globals.css";
 
 export const metadata = {
@@ -30,6 +31,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta httpEquiv="Referrer-Policy" content="no-referrer" />
       </head>
       <body className="relative">
+        <header className="relative z-20 px-6 pt-6 md:px-12">
+          <div className="mx-auto flex max-w-6xl items-center justify-between">
+            <Link href="/" className="text-sm font-semibold text-ink">
+              PII + Secret Scrubber
+            </Link>
+            <nav className="flex items-center gap-3 text-xs text-slate">
+              <Link
+                href="/how-it-works"
+                className="rounded-full bg-[var(--accent)] px-4 py-2 font-semibold text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
+              >
+                How it works
+              </Link>
+            </nav>
+          </div>
+        </header>
         {children}
       </body>
     </html>
