@@ -242,7 +242,7 @@ export default function HomePage() {
             <h1 className="text-4xl md:text-5xl font-semibold text-ink">
               PII + Secret Scrubber
             </h1>
-            <p className="text-slate max-w-2xl">
+            <p className="text-slate max-w-none">
               Paste text or drop a file. Scrubbing runs locally in your browser with
               deterministic rules and no uploads.
             </p>
