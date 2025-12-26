@@ -530,6 +530,9 @@ export default function HomePage() {
 
               <div className="mt-4 rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-3">
                 <p className="text-xs font-semibold text-ink">Summary</p>
+                <p className="mt-1 text-[11px] text-slate">
+                  Totals reflect items scrubbed from the output.
+                </p>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate">
                   <span className="rounded-full border border-[var(--panel-border)] px-3 py-1 text-xs text-slate">
                     Total: {report?.totalFindings ?? 0}
