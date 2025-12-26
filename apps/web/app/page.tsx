@@ -193,28 +193,25 @@ export default function HomePage() {
           <header className="flex flex-col gap-3 animate-rise">
             <p className="uppercase tracking-[0.3em] text-xs text-slate">Local-First Scrubber</p>
             <h1 className="text-4xl md:text-5xl font-semibold text-ink">
-              PII + Secret Scrubber for Offline Logs
+              PII + Secret Scrubber
             </h1>
             <p className="text-slate max-w-2xl">
-              Paste text or drop a file. Everything scrubs locally in your browser with
-              deterministic rules and zero uploads.
+              Paste text or drop a file. Scrubbing runs locally in your browser with
+              deterministic rules and no uploads.
             </p>
           </header>
 
           <section className="rounded-3xl border border-[var(--panel-border)] bg-[var(--panel)] p-4 text-xs text-slate shadow-soft animate-rise">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-ink">How to use</h2>
-              <span className="rounded-full border border-[var(--panel-border)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate">
-                60 seconds
-              </span>
             </div>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               <div className="rounded-2xl bg-[#fbfaf7] p-4">
                 <p className="text-ink font-semibold">1. Input</p>
-                <p className="mt-1">Paste text or drop a log/JSON file.</p>
+                <p className="mt-1">Paste text or drop/upload the file.</p>
               </div>
               <div className="rounded-2xl bg-[#fbfaf7] p-4">
-                <p className="text-ink font-semibold">2. Choose mode</p>
+                <p className="text-ink font-semibold">2. Choose scrub mode</p>
                 <p className="mt-1">Pick redact, token-map, or salted hash.</p>
               </div>
               <div className="rounded-2xl bg-[#fbfaf7] p-4">
@@ -370,33 +367,45 @@ export default function HomePage() {
             </div>
 
             <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
-              <h2 className="text-xl font-semibold">Guidance</h2>
-              <div className="mt-4 space-y-4 text-xs text-slate">
-                <div className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
-                  <p className="text-sm font-semibold text-ink">How it works</p>
+              <h2 className="text-xl font-semibold">How it works</h2>
+              <p className="mt-1 text-xs text-slate">
+                Details about detection, privacy, and how your data stays local.
+              </p>
+              <div className="mt-4 space-y-3 text-xs text-slate">
+                <details className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-ink">
+                    Detection pipeline
+                  </summary>
                   <p className="mt-2">
-                    Detection is deterministic (regex + validation + entropy), running locally in a Web Worker.
+                    We use deterministic detection (regex + validation + entropy) in a Web Worker.
+                    Your text never leaves the browser.
                   </p>
                   <p className="mt-2">
-                    Token-map writes a sensitive mapping.jsonl file that can restore originals.
+                    Replacements happen locally and are applied from end-to-start to preserve offsets.
+                  </p>
+                </details>
+                <details className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-ink">
+                    Privacy + local-only
+                  </summary>
+                  <p className="mt-2">
+                    No uploads, no telemetry, no analytics. This site makes no network calls with your content.
                   </p>
                   <p className="mt-2">
-                    Hash mode uses your salt for linkable identifiers; salt is never stored.
+                    If you download mapping.jsonl (token-map), treat it as sensitive and encrypt before sharing.
                   </p>
-                </div>
-                <div className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
-                  <p className="text-sm font-semibold text-ink">Privacy + safety</p>
-                  <p className="mt-2">Everything stays in your browser. No uploads. No telemetry.</p>
+                </details>
+                <details className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-ink">
+                    Mode tips
+                  </summary>
                   <p className="mt-2">
-                    If you generate mapping.jsonl, store it securely and encrypt before sharing.
+                    Keep Aggressive off for higher confidence. Use Keep Last for partial visibility.
                   </p>
-                </div>
-                <div className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
-                  <p className="text-sm font-semibold text-ink">Tips</p>
                   <p className="mt-2">
-                    For high confidence only, keep Aggressive off. Use Keep Last for partial visibility.
+                    Hash mode uses your salt for linkable identifiers; the salt is never stored.
                   </p>
-                </div>
+                </details>
               </div>
             </section>
           </div>
