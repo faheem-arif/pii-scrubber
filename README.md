@@ -2,7 +2,7 @@
 
 Scrub sensitive data entirely in your browser. No uploads, no telemetry, no analytics.
 
-Live demo: https://faheem-arif.github.io/pii-scrubber/
+Live site: https://faheem-arif.github.io/pii-scrubber/
 
 ## Setup Guide
 

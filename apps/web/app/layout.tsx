@@ -35,17 +35,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <Link
               href="/"
-              className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--accent)] px-4 text-sm font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
             >
               PII + Secret Scrubber
             </Link>
             <nav className="flex items-center gap-3 text-xs text-slate">
               <Link
                 href="/how-it-works"
-                className="rounded-full bg-[var(--accent)] px-4 py-2 font-semibold text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
+                className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--accent)] px-4 text-center font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
               >
                 How it works
               </Link>
+              <a
+                href="https://github.com/faheem-arif/pii-scrubber"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--accent)] px-4 text-center font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
+              >
+                GitHub
+              </a>
             </nav>
           </div>
         </header>
