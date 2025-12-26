@@ -12,6 +12,14 @@ const DIFF_LIMIT = 2000;
 const formatBytes = (bytes: number) =>
   `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 
+const EXAMPLE_TEXT = `User john.doe@corp.com logged in from 192.168.1.10.
+JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+AWS key: AKIAIOSFODNN7EXAMPLE
+Secret token=sk_live_51H8XyZp2Qd3MNx6y7a8b9c0d1e2f3g4`;
+
+const secondaryButtonClass =
+  "rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-4 py-2 text-xs font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition";
+
 const modeDescriptions: Record<ScrubMode, string> = {
   redact: "Irreversible replacement like [EMAIL_REDACTED]. Best for sharing.",
   "token-map": "Stable tokens plus a mapping file that can restore originals.",
@@ -33,6 +41,7 @@ export default function HomePage() {
   const [busy, setBusy] = useState(false);
   const [diffView, setDiffView] = useState(false);
   const [fileLabel, setFileLabel] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const generateSalt = () => {
     setMessage(null);
@@ -63,6 +72,8 @@ export default function HomePage() {
         setOutputText(data.result.scrubbedText);
         setReport(data.result.report);
         setMappingJsonl(data.result.mappingJsonl ?? null);
+        const count = data.result.report.totalFindings;
+        setToastMessage(`${count} finding${count === 1 ? "" : "s"} scrubbed`);
       } else {
         setMessage(data.error);
       }
@@ -78,6 +89,14 @@ export default function HomePage() {
       worker.terminate();
     };
   }, []);
+
+  useEffect(() => {
+    if (!toastMessage) {
+      return;
+    }
+    const timer = setTimeout(() => setToastMessage(null), 2500);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   const diffRows = useMemo(() => {
     if (!diffView) {
@@ -160,6 +179,32 @@ export default function HomePage() {
     setFileLabel(null);
   };
 
+  const loadExample = () => {
+    setMessage(null);
+    setWarning(null);
+    setFileLabel("Example data");
+    setInputText(EXAMPLE_TEXT);
+    setOutputText("");
+    setReport(null);
+    setMappingJsonl(null);
+  };
+
+  const copyOutput = async () => {
+    if (!outputText) {
+      return;
+    }
+    if (!navigator.clipboard?.writeText) {
+      setMessage("Clipboard not available in this browser.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(outputText);
+      setToastMessage("Output copied");
+    } catch {
+      setMessage("Failed to copy output.");
+    }
+  };
+
   const downloadReport = () => {
     if (!report) {
       return;
@@ -191,30 +236,29 @@ export default function HomePage() {
       <section className="max-w-6xl mx-auto">
         <div className="flex flex-col gap-6">
           <header className="flex flex-col gap-3 animate-rise">
-            <p className="uppercase tracking-[0.3em] text-xs text-slate">Local-First Scrubber</p>
+            <p className="uppercase tracking-[0.3em] text-xs text-slate">
+              Local-only — nothing leaves your browser
+            </p>
             <h1 className="text-4xl md:text-5xl font-semibold text-ink">
-              PII + Secret Scrubber for Offline Logs
+              PII + Secret Scrubber
             </h1>
-            <p className="text-slate max-w-2xl">
-              Paste text or drop a file. Everything scrubs locally in your browser with
-              deterministic rules and zero uploads.
+            <p className="text-slate max-w-none">
+              Paste text or drop a file. Scrubbing runs locally in your browser with
+              deterministic rules and no uploads.
             </p>
           </header>
 
           <section className="rounded-3xl border border-[var(--panel-border)] bg-[var(--panel)] p-4 text-xs text-slate shadow-soft animate-rise">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-ink">How to use</h2>
-              <span className="rounded-full border border-[var(--panel-border)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate">
-                60 seconds
-              </span>
             </div>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               <div className="rounded-2xl bg-[#fbfaf7] p-4">
                 <p className="text-ink font-semibold">1. Input</p>
-                <p className="mt-1">Paste text or drop a log/JSON file.</p>
+                <p className="mt-1">Paste text or drop/upload the file.</p>
               </div>
               <div className="rounded-2xl bg-[#fbfaf7] p-4">
-                <p className="text-ink font-semibold">2. Choose mode</p>
+                <p className="text-ink font-semibold">2. Choose scrub mode</p>
                 <p className="mt-1">Pick redact, token-map, or salted hash.</p>
               </div>
               <div className="rounded-2xl bg-[#fbfaf7] p-4">
@@ -225,21 +269,28 @@ export default function HomePage() {
           </section>
 
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="flex flex-col gap-6">
-              <section
-                className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise"
-                onDrop={onDrop}
-                onDragOver={(event) => event.preventDefault()}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-xl font-semibold">Input</h2>
-                    <p className="text-sm text-slate">
-                      Drag a .txt/.log/.json file here or paste directly.
-                    </p>
-                  </div>
+            <section
+              className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise"
+              onDrop={onDrop}
+              onDragOver={(event) => event.preventDefault()}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold">1. Input</h2>
+                  <p className="text-sm text-slate">
+                    Drag a .txt/.log/.json file here or paste directly.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={loadExample}
+                    className={secondaryButtonClass}
+                  >
+                    Use example
+                  </button>
                   <label className="text-sm font-semibold text-ink">
-                    <span className="px-3 py-2 border border-dashed border-slate rounded-full cursor-pointer hover:border-ink transition">
+                    <span className="px-4 py-2 rounded-full cursor-pointer bg-[var(--accent)] text-ink shadow-soft hover:bg-[var(--accent-dark)] transition">
                       Browse
                     </span>
                     <input
@@ -250,34 +301,35 @@ export default function HomePage() {
                     />
                   </label>
                 </div>
+              </div>
 
-                <textarea
-                  className="mt-4 w-full min-h-[260px] rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                  placeholder="Paste logs, JSON, or text here..."
-                  value={inputText}
-                  onChange={(event) => setInputText(event.target.value)}
-                />
+              <textarea
+                className="mt-4 w-full min-h-[260px] rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                placeholder="Paste logs, JSON, or text here..."
+                value={inputText}
+                onChange={(event) => setInputText(event.target.value)}
+              />
 
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate">
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate">
+                <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
+                  {inputText.length.toLocaleString()} chars
+                </span>
+                {fileLabel ? (
                   <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
-                    {inputText.length.toLocaleString()} chars
+                    {fileLabel}
                   </span>
-                  {fileLabel ? (
-                    <span className="px-3 py-1 rounded-full border border-[var(--panel-border)]">
-                      {fileLabel}
-                    </span>
-                  ) : null}
-                  {warning ? (
-                    <span className="px-3 py-1 rounded-full border border-[var(--panel-border)] text-amber-700">
-                      {warning}
-                    </span>
-                  ) : null}
-                </div>
-              </section>
+                ) : null}
+                {warning ? (
+                  <span className="px-3 py-1 rounded-full border border-[var(--panel-border)] text-amber-700">
+                    {warning}
+                  </span>
+                ) : null}
+              </div>
+            </section>
 
-              <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
-                <h2 className="text-xl font-semibold">Scrub Options</h2>
-                <div className="mt-4 grid gap-4">
+            <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
+              <h2 className="text-xl font-semibold">2. Scrub Options</h2>
+              <div className="mt-4 grid gap-4">
                 <label className="text-sm font-semibold text-slate">
                   Mode
                   <select
@@ -304,6 +356,9 @@ export default function HomePage() {
                     onChange={(event) => setKeepLast(Number(event.target.value))}
                     className="mt-2 w-full rounded-2xl border border-[var(--panel-border)] bg-white p-2 text-sm"
                   />
+                  <p className="mt-2 text-xs font-normal text-slate">
+                    Example: set 4 to keep the last 4 characters visible after scrubbing.
+                  </p>
                 </label>
 
                 <label className="flex items-center gap-3 text-sm font-semibold text-slate">
@@ -335,7 +390,7 @@ export default function HomePage() {
                       <button
                         type="button"
                         onClick={generateSalt}
-                        className="rounded-full border border-[var(--panel-border)] px-4 py-1 text-[11px] font-semibold text-slate hover:border-ink transition"
+                        className="rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-4 py-1 text-[11px] font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition"
                       >
                         Generate random salt
                       </button>
@@ -355,7 +410,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={resetAll}
-                    className="rounded-full border border-[var(--panel-border)] px-5 py-2 text-sm font-semibold text-slate hover:border-ink transition"
+                    className="rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-5 py-2 text-sm font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition"
                   >
                     Clear
                   </button>
@@ -365,38 +420,6 @@ export default function HomePage() {
                   <p className="text-sm text-rose-700">{message}</p>
                 ) : null}
 
-                </div>
-              </section>
-            </div>
-
-            <section className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft animate-rise">
-              <h2 className="text-xl font-semibold">Guidance</h2>
-              <div className="mt-4 space-y-4 text-xs text-slate">
-                <div className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
-                  <p className="text-sm font-semibold text-ink">How it works</p>
-                  <p className="mt-2">
-                    Detection is deterministic (regex + validation + entropy), running locally in a Web Worker.
-                  </p>
-                  <p className="mt-2">
-                    Token-map writes a sensitive mapping.jsonl file that can restore originals.
-                  </p>
-                  <p className="mt-2">
-                    Hash mode uses your salt for linkable identifiers; salt is never stored.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
-                  <p className="text-sm font-semibold text-ink">Privacy + safety</p>
-                  <p className="mt-2">Everything stays in your browser. No uploads. No telemetry.</p>
-                  <p className="mt-2">
-                    If you generate mapping.jsonl, store it securely and encrypt before sharing.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4">
-                  <p className="text-sm font-semibold text-ink">Tips</p>
-                  <p className="mt-2">
-                    For high confidence only, keep Aggressive off. Use Keep Last for partial visibility.
-                  </p>
-                </div>
               </div>
             </section>
           </div>
@@ -405,7 +428,7 @@ export default function HomePage() {
             <div className="bg-[var(--panel)] border border-[var(--panel-border)] rounded-3xl p-6 shadow-soft">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold">Output</h2>
+                  <h2 className="text-xl font-semibold">3. Output</h2>
                   <p className="text-sm text-slate">Review and export scrubbed results.</p>
                 </div>
                 <label className="flex items-center gap-2 text-sm text-slate">
@@ -470,15 +493,23 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={downloadOutput}
-                  className="rounded-full border border-[var(--panel-border)] px-4 py-2 text-xs font-semibold text-slate hover:border-ink transition"
+                  className={secondaryButtonClass}
                   disabled={!outputText}
                 >
                   Download scrubbed
                 </button>
                 <button
                   type="button"
+                  onClick={copyOutput}
+                  className={secondaryButtonClass}
+                  disabled={!outputText}
+                >
+                  Copy output
+                </button>
+                <button
+                  type="button"
                   onClick={downloadReport}
-                  className="rounded-full border border-[var(--panel-border)] px-4 py-2 text-xs font-semibold text-slate hover:border-ink transition"
+                  className={secondaryButtonClass}
                   disabled={!report}
                 >
                   Download report.json
@@ -487,7 +518,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={downloadMapping}
-                    className="rounded-full border border-[var(--panel-border)] px-4 py-2 text-xs font-semibold text-slate hover:border-ink transition"
+                    className={secondaryButtonClass}
                     disabled={!mappingJsonl}
                   >
                     Download mapping.jsonl
@@ -529,6 +560,11 @@ export default function HomePage() {
           </section>
         </div>
       </section>
+      {toastMessage ? (
+        <div className="fixed bottom-6 right-6 z-50 rounded-full bg-ink px-4 py-2 text-xs font-semibold text-fog shadow-soft">
+          {toastMessage}
+        </div>
+      ) : null}
     </main>
   );
 }
