@@ -4,6 +4,10 @@ Scrub sensitive data entirely in your browser. No uploads, no telemetry, no anal
 
 Live site: https://faheem-arif.github.io/pii-scrubber/
 
+## Screenshot
+
+<img src="docs/screenshot.png" alt="PII + Secret Scrubber UI" width="900" />
+
 ## Setup Guide
 
 1) Install deps: `pnpm install`
