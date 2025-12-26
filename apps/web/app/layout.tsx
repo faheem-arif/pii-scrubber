@@ -33,7 +33,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="relative">
         <header className="relative z-20 px-6 pt-6 md:px-12">
           <div className="mx-auto flex max-w-6xl items-center justify-between">
-            <Link href="/" className="text-sm font-semibold text-ink">
+            <Link
+              href="/"
+              className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
+            >
               PII + Secret Scrubber
             </Link>
             <nav className="flex items-center gap-3 text-xs text-slate">
