@@ -278,14 +278,14 @@ export default function HomePage() {
               onDrop={onDrop}
               onDragOver={(event) => event.preventDefault()}
             >
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-xl font-semibold">1. Input</h2>
                   <p className="text-sm text-slate">
                     Drag a .txt/.log/.json file here or paste directly.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-end">
                   <button
                     type="button"
                     onClick={loadExample}
