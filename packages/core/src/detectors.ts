@@ -212,7 +212,7 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
   for (const match of text.matchAll(ipv4Regex)) {
     const index = match.index ?? 0;
     const value = match[0];
-    if (!hasBoundary(text, index, index + value.length, /[0-9.]/)) {
+    if (!hasBoundary(text, index, index + value.length, /[0-9]/)) {
       continue;
     }
     if (!isValidIPv4(value)) {
