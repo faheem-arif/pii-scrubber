@@ -1,0 +1,3 @@
+timestamp=2025-12-26T09:40:55Z activity=SignIn userPrincipalName=faheem.arif@example.com ipAddress=203.0.113.99
+clientApp=Browser conditionalAccessStatus=success correlationId=3d6f0a9a-2b3c-4f59-9c4c-4c6d7e8f9a0b
+detail="MFA satisfied"

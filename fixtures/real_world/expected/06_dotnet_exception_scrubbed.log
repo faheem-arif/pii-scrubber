@@ -1,0 +1,6 @@
+2025-12-26 09:31:02.100 +00:00 ERR Unhandled exception for user [EMAIL_REDACTED] (reqId=[UUID_REDACTED])
+System.Data.SqlClient.SqlException (0x80131904): Login failed for user 'appuser'.
+Connection string: Server=tcp:sql.example.com,1433;Database=appdb;User ID=appuser;Password=[PASSWORD_REDACTED];Encrypt=True;
+   at System.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at App.Services.AuthService.Login(String email, String password)
+ClientIp=[IPV4_REDACTED]

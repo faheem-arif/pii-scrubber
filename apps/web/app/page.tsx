@@ -8,9 +8,14 @@ import { downloadFile } from "../src/utils/download";
 const MAX_FILE_MB = 25;
 const WARN_FILE_MB = 5;
 const DIFF_LIMIT = 2000;
+const INPUT_TOO_LARGE_MESSAGE = `Input too large. ${MAX_FILE_MB} MB max in v1.`;
+const FILE_TOO_LARGE_MESSAGE = `File too large. ${MAX_FILE_MB} MB max in v1.`;
 
 const formatBytes = (bytes: number) =>
   `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+
+const isOverInputLimit = (value: string): boolean =>
+  new TextEncoder().encode(value).length > MAX_FILE_MB * 1024 * 1024;
 
 const EXAMPLE_TEXT = `User john.doe@corp.com logged in from 192.168.1.10.
 JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
@@ -21,6 +26,27 @@ const secondaryButtonClass =
   "rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-4 py-2 text-xs font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition";
 const smallPillClass =
   "inline-flex items-center justify-center rounded-full border border-[var(--panel-border)] bg-[#fbfaf7] px-3 py-2 text-[11px] font-semibold text-slate shadow-soft hover:border-ink hover:text-ink transition";
+
+const sanitizeFilename = (name: string): string =>
+  name.replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^_+|_+$/g, "");
+
+const deriveScrubbedFilename = (originalName: string | null): string => {
+  if (!originalName) {
+    return "scrubbed.txt";
+  }
+  const sanitized = sanitizeFilename(originalName);
+  if (!sanitized) {
+    return "scrubbed.txt";
+  }
+  const dotIndex = sanitized.lastIndexOf(".");
+  let base = sanitized;
+  let ext = ".txt";
+  if (dotIndex > 0 && dotIndex < sanitized.length - 1) {
+    base = sanitized.slice(0, dotIndex);
+    ext = sanitized.slice(dotIndex);
+  }
+  return `${base}_scrubbed${ext}`;
+};
 
 const modeDescriptions: Record<ScrubMode, string> = {
   redact: "Irreversible replacement like [EMAIL_REDACTED]. Best for sharing.",
@@ -44,6 +70,7 @@ export default function HomePage() {
   const [diffView, setDiffView] = useState(false);
   const [fileLabel, setFileLabel] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [inputFileName, setInputFileName] = useState<string | null>(null);
 
   const generateSalt = () => {
     setMessage(null);
@@ -111,9 +138,10 @@ export default function HomePage() {
     setMessage(null);
     setWarning(null);
     setFileLabel(`${file.name} (${formatBytes(file.size)})`);
+    setInputFileName(file.name);
 
     if (file.size > MAX_FILE_MB * 1024 * 1024) {
-      setMessage(`File too large. ${MAX_FILE_MB} MB max in v1.`);
+      setMessage(FILE_TOO_LARGE_MESSAGE);
       return;
     }
 
@@ -145,6 +173,18 @@ export default function HomePage() {
     if (file) {
       handleFile(file);
     }
+  };
+
+  const onInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = event.target.value;
+    if (isOverInputLimit(value)) {
+      setMessage(INPUT_TOO_LARGE_MESSAGE);
+      return;
+    }
+    if (message === INPUT_TOO_LARGE_MESSAGE) {
+      setMessage(null);
+    }
+    setInputText(value);
   };
 
   const runScrub = () => {
@@ -179,12 +219,14 @@ export default function HomePage() {
     setMessage(null);
     setWarning(null);
     setFileLabel(null);
+    setInputFileName(null);
   };
 
   const loadExample = () => {
     setMessage(null);
     setWarning(null);
     setFileLabel("Example data");
+    setInputFileName(null);
     setInputText(EXAMPLE_TEXT);
     setOutputText("");
     setReport(null);
@@ -218,7 +260,8 @@ export default function HomePage() {
     if (!outputText) {
       return;
     }
-    downloadFile("scrubbed.txt", outputText, "text/plain;charset=utf-8");
+    const filename = deriveScrubbedFilename(inputFileName);
+    downloadFile(filename, outputText, "text/plain;charset=utf-8");
   };
 
   const downloadMapping = () => {
@@ -232,6 +275,15 @@ export default function HomePage() {
   const typeList = typeBadges.length
     ? typeBadges.sort((a, b) => b[1] - a[1])
     : [];
+  const canScrub =
+    inputText.trim().length > 0 && (mode !== "hash" || hashSalt.trim().length > 0);
+  const scrubHint = !inputText.trim()
+    ? "Paste or drop a file to start."
+    : mode === "hash" && !hashSalt.trim()
+    ? "Add a salt to enable hash mode."
+    : null;
+  const isInputTooLargeMessage =
+    message === INPUT_TOO_LARGE_MESSAGE || message === FILE_TOO_LARGE_MESSAGE;
 
   return (
     <main className="relative z-10 px-6 py-10 md:px-12">
@@ -280,7 +332,7 @@ export default function HomePage() {
                 <div>
                   <h2 className="text-xl font-semibold">1. Input</h2>
                   <p className="text-sm text-slate">
-                    Drag a .txt/.log/.json file here or paste directly.
+                    Drag a .txt/.log/.json file here or paste directly. (Max 25 MB)
                   </p>
                 </div>
                 <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-end">
@@ -307,7 +359,7 @@ export default function HomePage() {
                 className="mt-4 w-full min-h-[260px] rounded-2xl border border-[var(--panel-border)] bg-[#fbfaf7] p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 placeholder="Paste logs, JSON, or text here..."
                 value={inputText}
-                onChange={(event) => setInputText(event.target.value)}
+                onChange={onInputChange}
               />
 
               <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate">
@@ -322,6 +374,11 @@ export default function HomePage() {
                 {warning ? (
                   <span className="px-3 py-1 rounded-full border border-[var(--panel-border)] text-amber-700">
                     {warning}
+                  </span>
+                ) : null}
+                {isInputTooLargeMessage ? (
+                  <span className="px-3 py-1 rounded-full border border-[var(--panel-border)] text-rose-700">
+                    {message}
                   </span>
                 ) : null}
               </div>
@@ -402,8 +459,12 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={runScrub}
-                    className="rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-ink hover:bg-[var(--accent-dark)] transition"
-                    disabled={busy}
+                    className={`rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-ink transition ${
+                      !canScrub || busy
+                        ? "cursor-not-allowed opacity-60"
+                        : "hover:bg-[var(--accent-dark)]"
+                    }`}
+                    disabled={busy || !canScrub}
                   >
                     {busy ? "Scrubbing..." : "Scrub"}
                   </button>
@@ -416,7 +477,11 @@ export default function HomePage() {
                   </button>
                 </div>
 
-                {message ? (
+                {!busy && scrubHint ? (
+                  <p className="text-xs text-slate">{scrubHint}</p>
+                ) : null}
+
+                {message && !isInputTooLargeMessage ? (
                   <p className="text-sm text-rose-700">{message}</p>
                 ) : null}
 

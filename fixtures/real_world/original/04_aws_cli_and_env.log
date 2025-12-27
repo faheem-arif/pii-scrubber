@@ -1,0 +1,5 @@
+2025-12-26T09:25:11Z INFO Running deployment as user=deploy.bot@example.com
+AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+export AWS_SESSION_TOKEN=IQoJb3JpZ2luX2VjEJr//////////wEaCXVzLWVhc3QtMSJGMEQCIH2m0rT3H1N0Gm2hV7f3R3x9m3a8kGmYkJzJ8c0mS3wAiA0h3KxWm9D7yUjZqvN0mV9yQp8l0u8X0k2n2u8nQ==
+aws sts get-caller-identity --region eu-west-1

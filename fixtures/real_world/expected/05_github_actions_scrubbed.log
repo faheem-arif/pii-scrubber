@@ -1,0 +1,6 @@
+Run actions/checkout@v4
+Run pnpm install --frozen-lockfile
+Run pnpm -w test
+ENV: GITHUB_TOKEN=[GITHUB_TOKEN_REDACTED]
+ENV: NPM_TOKEN=[GENERIC_SECRET_REDACTED]
+ENV: SLACK_WEBHOOK_URL=[SLACK_WEBHOOK_REDACTED]

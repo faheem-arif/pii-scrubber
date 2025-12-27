@@ -1,70 +1,94 @@
 # Local-First PII + Secret Scrubber
 
-Scrub sensitive data entirely in your browser. No uploads, no telemetry, no analytics.
+Scrub sensitive data **entirely in your browser** - **no uploads**, **no telemetry**, **no analytics**.
 
-Live site: https://faheem-arif.github.io/pii-scrubber/
+**Live Site:** https://faheem-arif.github.io/pii-scrubber/
+
+> Privacy promise: your input is processed locally (Web Worker). The app does not send your content to any server.
+
+---
 
 ## Screenshot
 
-<img src="docs/screenshot.png" alt="PII + Secret Scrubber UI" width="900" />
+![PII + Secret Scrubber UI](docs/screenshot.png)
 
-## Setup Guide
+---
 
-1) Install deps: `pnpm install`
-2) Run the web app: `pnpm --filter @pii-scrubber/web dev`
-3) Paste text or drop a .txt/.log/.json file
-4) Pick a mode (redact, token-map, hash) and click **Scrub**
-5) Download the scrubbed output and `report.json` (and `mapping.jsonl` if using token-map)
+## What it does
 
-## Privacy promise
+- Paste text or drop a `.txt` / `.log` / `.json` file
+- Detect common PII + secrets using deterministic rules
+- Scrub using one of three modes (redact / token-map / hash)
+- Export scrubbed output + `report.json` (and `mapping.jsonl` for token-map)
 
-- All detection and scrubbing happens locally in your browser.
-- No network calls, telemetry, or analytics are used or shipped.
-- The core engine is a pure TypeScript library (browser-safe).
+---
 
-## Features (v1)
+## Scrub modes
 
-- Deterministic detectors: email, IPv4/IPv6, UUID, URL basic auth, JWT, PEM private keys, GitHub tokens, AWS access keys, and high-entropy secrets.
-- Scrub modes:
-  - `redact`: irreversible (`[EMAIL_REDACTED]`)
-  - `token-map`: stable tokens per run with `mapping.jsonl`
-  - `hash`: salted SHA-256 (`TYPE_SHA256:<digest>`)
-- Web Worker execution keeps UI responsive.
-- Summary badges + report download.
-- Diff toggle for quick review.
-- File size warning > 5MB; hard cap at 25MB in v1.
+- **Redact (recommended for sharing):** irreversible placeholders (e.g., `[EMAIL_REDACTED]`)
+- **Token-map (traceable):** replaces values with stable tokens per run (e.g., `[[EMAIL:1]]`) and generates `mapping.jsonl`
+- **Hash (linkable):** salted SHA-256 digests for consistent, non-reversible identifiers: `TYPE_SHA256:<digest>`
 
-## Security guidance (token-map)
+**Token-map warning:** `mapping.jsonl` contains original sensitive values. Treat it like a secret (encrypt at rest, don't share unless necessary).
 
-`mapping.jsonl` contains the original sensitive values. Treat it like a secret:
-- Store it securely (encrypted at rest if possible).
-- Do not share unless absolutely necessary.
-- If you must share, encrypt the file before sending.
+---
 
-## Limitations (v1)
+## Detectors (v1)
 
-- No OCR or document/image processing.
-- No name/address detection; limited to deterministic patterns listed above.
-- No cloud backend, accounts, or persistence.
-- Large files are capped at 25MB in the UI.
+Deterministic detectors (regex + structural validation + entropy heuristics), including:
+
+- **PII:** email, IPv4/IPv6, UUID, URL basic auth
+- **Secrets:** JWT, PEM private keys, GitHub tokens, AWS access keys, high-entropy secrets (keyword-adjacent)
+
+---
+
+## Usage (Web)
+
+1. Open the site: https://faheem-arif.github.io/pii-scrubber/
+2. Paste text or drop a file
+3. Choose a mode and click **Scrub**
+4. Download:
+   - scrubbed output
+   - `report.json`
+   - `mapping.jsonl` (token-map only)
+
+Notes:
+- Diff view helps you review changes quickly.
+- UI warns above 5MB and caps at 25MB in v1.
+
+---
+
+## Development
+
+### Install
+```bash
+pnpm install
+```
+Note: If `pnpm` is not on your PATH, use `corepack pnpm` instead.
+### Run (web)
+```bash
+pnpm --filter @pii-scrubber/web dev
+```
+### Tests
+```bash
+pnpm -w test
+```
+### Build
+```bash
+pnpm -w build
+```
+
+#### Build notes: the web app uses Next.js static export (output: "export") and runs client-side.
+
+## Limitations
+- Heuristic detection; not guaranteed to catch all sensitive data. Always review before sharing externally.
+- No OCR/document/image processing.
+- No name/address detection (no NLP); limited to deterministic patterns listed above.
+- No backend, accounts, or persistence.
+- UI caps large files at 25MB in v1.
 
 ## Repo layout
-
-- `packages/core`: Scrubber engine (pure TypeScript)
-- `apps/web`: Next.js UI (static export)
-- `fixtures`: Shared fixtures for core tests
-- `.github/workflows/ci.yml`: CI pipeline
-
-## Commands
-
-- Dev server: `pnpm --filter @pii-scrubber/web dev`
-- Tests: `pnpm -w test`
-- Build: `pnpm -w build`
-
-## Build notes
-
-The web app uses Next.js static export (`output: "export"`) and runs entirely client-side.
-
-## License
-
-MIT
+- packages/core - scrubber engine (pure TypeScript, browser-safe)
+- apps/web - Next.js UI (static export)
+- fixtures - shared fixtures for core tests
+- .github/workflows/ci.yml - CI pipeline

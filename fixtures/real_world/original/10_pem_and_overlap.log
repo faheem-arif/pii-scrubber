@@ -1,0 +1,7 @@
+User email in URL basic auth (overlap):
+https://john.doe@example.com:MyP@ssw0rd!@example.com/path
+
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDkYlVZ3rZ3xKpV
+k5m9x8qg3Zz0uHk3C2cWqZp3y6lqB0s9mTqVq2+u1YQm8uYV0q8G0mO9lOq2m1y1
+-----END PRIVATE KEY-----
