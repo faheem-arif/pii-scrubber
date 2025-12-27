@@ -512,6 +512,13 @@ export default function HomePage() {
                   securely if you need to restore data later.
                 </div>
               ) : null}
+              {report?.warnings?.length ? (
+                <div className="mt-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+                  {report.warnings.map((warning, index) => (
+                    <p key={`warning-${index}`}>{warning}</p>
+                  ))}
+                </div>
+              ) : null}
 
               {!diffView ? (
                 <textarea

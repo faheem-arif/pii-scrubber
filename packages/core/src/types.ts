@@ -21,6 +21,7 @@ export interface ScrubReport {
   totalFindings: number;
   byType: Record<string, number>;
   findings: Array<Omit<Finding, "replacement">>;
+  warnings?: string[];
 }
 
 export interface ScrubResult {
