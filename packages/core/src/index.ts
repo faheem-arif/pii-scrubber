@@ -7,7 +7,7 @@ const DEFAULT_MAX_MATCHES = 5000;
 const MAX_MATCHES_HARD_CAP = 250000;
 
 const computeMaxMatches = (textLength: number, provided?: number): number => {
-  const sizeBased = Math.ceil(textLength / 100);
+  const sizeBased = Math.ceil(textLength / 20);
   const requested = provided ?? Math.max(DEFAULT_MAX_MATCHES, sizeBased);
   return clampNumber(requested, 1, MAX_MATCHES_HARD_CAP);
 };
