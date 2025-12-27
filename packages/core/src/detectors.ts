@@ -14,10 +14,15 @@ export interface CandidateFinding {
 const SEVERITY_BY_TYPE: Record<string, number> = {
   private_key: 4,
   jwt: 4,
+  slack_webhook: 4,
   github_token: 4,
   aws_access_key: 4,
+  aws_secret_access_key: 4,
+  aws_session_token: 4,
   url_basic_auth: 3,
-  generic_secret: 3,
+  password: 3,
+  cookie: 3,
+  generic_secret: 2,
   email: 1,
   ipv4: 1,
   ipv6: 1,
@@ -34,7 +39,56 @@ const KEYWORDS = [
   "pwd",
   "access_key",
   "auth",
-  "bearer"
+  "bearer",
+  "session",
+  "session_id",
+  "sid",
+  "csrf"
+];
+
+const SECRET_KEY_NAMES = [
+  "api_key",
+  "apikey",
+  "token",
+  "secret",
+  "password",
+  "passwd",
+  "pwd",
+  "access_key",
+  "accesskey",
+  "auth",
+  "authorization",
+  "bearer",
+  "session",
+  "session_id",
+  "sid",
+  "csrf",
+  "xsrf",
+  "client_secret",
+  "access_token",
+  "refresh_token",
+  "aws_secret_access_key",
+  "aws_session_token",
+  "aws_access_key_id",
+  "github_token",
+  "npm_token",
+  "slack_webhook_url"
+];
+
+const GENERIC_SECRET_DENYLIST_KEYS = ["requesturi", "request_uri", "endpoint", "path", "url", "uri"];
+
+const COOKIE_SECRET_KEYS = [
+  "session",
+  "session_id",
+  "sid",
+  "auth",
+  "token",
+  "jwt",
+  "bearer",
+  "csrf",
+  "xsrf",
+  "access_token",
+  "refresh_token"
 ];
 
 const EMAIL_ALLOWED = /[A-Za-z0-9_%+-]/;
@@ -109,11 +163,19 @@ const isValidIPv6 = (value: string): boolean => {
   return all.every((segment) => /^[0-9A-Fa-f]{1,4}$/.test(segment));
 };
 
-const hasKeywordNearby = (text: string, start: number, end: number): boolean => {
+const hasKeywordOutside = (text: string, start: number, end: number): boolean => {
   const windowStart = Math.max(0, start - 64);
   const windowEnd = Math.min(text.length, end + 32);
-  const context = text.slice(windowStart, windowEnd).toLowerCase();
-  return KEYWORDS.some((keyword) => context.includes(keyword));
+  const before = text.slice(windowStart, start).toLowerCase();
+  const after = text.slice(end, windowEnd).toLowerCase();
+  return KEYWORDS.some((keyword) => before.includes(keyword) || after.includes(keyword));
+};
+
+const getKeyNameBefore = (text: string, start: number): string | null => {
+  const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+  const segment = text.slice(lineStart, start);
+  const match = /([A-Za-z0-9_.-]{1,64})\s*(?::|=)\s*["']?$/.exec(segment);
+  return match ? match[1].toLowerCase() : null;
 };
 
 const decodeJwtHeader = (segment: string): Record<string, unknown> | null => {
@@ -130,6 +192,39 @@ const decodeJwtHeader = (segment: string): Record<string, unknown> | null => {
     return null;
   }
   return null;
+};
+
+const UUID_REGEX = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}/g;
+
+const isUuidLike = (value: string): boolean =>
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(value);
+
+const addKeyValueCandidates = (
+  text: string,
+  regex: RegExp,
+  type: string,
+  detector: string,
+  candidates: CandidateFinding[],
+  maxMatches: number,
+  confidence: "high" | "medium" | "low" = "high"
+): boolean => {
+  for (const match of text.matchAll(regex)) {
+    const value = match[1];
+    if (!value) {
+      continue;
+    }
+    const index = match.index ?? 0;
+    const valueOffset = match[0].indexOf(value);
+    if (valueOffset < 0) {
+      continue;
+    }
+    const start = index + valueOffset;
+    const end = start + value.length;
+    if (!addCandidate(candidates, candidate(type, detector, start, end, confidence), maxMatches)) {
+      return false;
+    }
+  }
+  return true;
 };
 
 export const detectAll = (text: string, options: ScrubOptions): CandidateFinding[] => {
@@ -154,6 +249,15 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
       continue;
     }
     if (!addCandidate(candidates, candidate("jwt", "jwt_structural", index, index + value.length, "high"), maxMatches)) {
+      return candidates;
+    }
+  }
+
+  const slackWebhookRegex = /https:\/\/hooks\.slack\.com\/services\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/[A-Za-z0-9]+/g;
+  for (const match of text.matchAll(slackWebhookRegex)) {
+    const index = match.index ?? 0;
+    const value = match[0];
+    if (!addCandidate(candidates, candidate("slack_webhook", "slack_webhook", index, index + value.length, "high"), maxMatches)) {
       return candidates;
     }
   }
@@ -185,6 +289,16 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
     if (!addCandidate(candidates, candidate("aws_access_key", "aws_access_key", index, index + value.length, "high"), maxMatches)) {
       return candidates;
     }
+  }
+
+  const awsSecretRegex = /AWS_SECRET_ACCESS_KEY\s*=\s*([A-Za-z0-9/+=]{16,})/g;
+  if (!addKeyValueCandidates(text, awsSecretRegex, "aws_secret_access_key", "aws_secret_access_key", candidates, maxMatches)) {
+    return candidates;
+  }
+
+  const awsSessionRegex = /AWS_SESSION_TOKEN\s*=\s*([A-Za-z0-9/+=]{16,})/g;
+  if (!addKeyValueCandidates(text, awsSessionRegex, "aws_session_token", "aws_session_token", candidates, maxMatches)) {
+    return candidates;
   }
 
   const basicAuthRegex = /https?:\/\/[^/\s:]+:[^/\s@]+@[^/\s]+(?:\/[^\s]*)?/g;
@@ -241,12 +355,45 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
     }
   }
 
-  const uuidRegex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}/g;
-  for (const match of text.matchAll(uuidRegex)) {
+  for (const match of text.matchAll(UUID_REGEX)) {
     const index = match.index ?? 0;
     const value = match[0];
     if (!addCandidate(candidates, candidate("uuid", "uuid", index, index + value.length, "high"), maxMatches)) {
       return candidates;
+    }
+  }
+
+  const passwordRegex = /\b(?:Password|Pwd)\s*=\s*(".*?"|'.*?'|[^;\s]+)/gi;
+  if (!addKeyValueCandidates(text, passwordRegex, "password", "connection_string_password", candidates, maxMatches)) {
+    return candidates;
+  }
+
+  const cookieHeaderRegex = /^Cookie:\s*([^\r\n]*)/gmi;
+  for (const match of text.matchAll(cookieHeaderRegex)) {
+    const cookieLine = match[1] ?? "";
+    if (!cookieLine) {
+      continue;
+    }
+    const lineStart = (match.index ?? 0) + match[0].indexOf(cookieLine);
+    const kvRegex = /\s*([A-Za-z0-9_.-]{1,64})=([^;]*)/g;
+    for (const kvMatch of cookieLine.matchAll(kvRegex)) {
+      const key = kvMatch[1]?.toLowerCase();
+      const value = kvMatch[2] ?? "";
+      if (!key || !value) {
+        continue;
+      }
+      if (!COOKIE_SECRET_KEYS.includes(key)) {
+        continue;
+      }
+      const valueOffset = kvMatch[0].indexOf(value);
+      if (valueOffset < 0) {
+        continue;
+      }
+      const start = lineStart + (kvMatch.index ?? 0) + valueOffset;
+      const end = start + value.length;
+      if (!addCandidate(candidates, candidate("cookie", "cookie_header", start, end, "high"), maxMatches)) {
+        return candidates;
+      }
     }
   }
 
@@ -261,21 +408,34 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
     const equalsIndex = value.indexOf("=");
     if (equalsIndex > 0) {
       const prefix = value.slice(0, equalsIndex).toLowerCase();
-      if (KEYWORDS.includes(prefix)) {
+      if (SECRET_KEY_NAMES.includes(prefix)) {
         index += equalsIndex + 1;
         value = value.slice(equalsIndex + 1);
       }
     }
 
-    const hasKeyword = hasKeywordNearby(text, index, index + value.length);
+    if (isUuidLike(value)) {
+      continue;
+    }
+
+    const keyName = getKeyNameBefore(text, index);
+    if (keyName && GENERIC_SECRET_DENYLIST_KEYS.includes(keyName)) {
+      continue;
+    }
+    const hasKeyword = hasKeywordOutside(text, index, index + value.length);
+    const hasSecretKey = keyName ? SECRET_KEY_NAMES.includes(keyName) : false;
     const entropy = shannonEntropy(value);
     const isHex = /^[0-9a-fA-F]+$/.test(value);
     const minLength = options.aggressive ? 16 : 20;
     const minEntropy = options.aggressive ? 3.2 : 3.6;
 
     let confidence: "high" | "medium" | "low" = "low";
-    if (value.length >= minLength && entropy >= minEntropy && (hasKeyword || options.aggressive)) {
-      confidence = hasKeyword ? "high" : "medium";
+    if (
+      value.length >= minLength &&
+      entropy >= minEntropy &&
+      (hasKeyword || hasSecretKey || options.aggressive)
+    ) {
+      confidence = hasKeyword || hasSecretKey ? "high" : "medium";
     }
 
     if (confidence === "low") {

@@ -1,0 +1,7 @@
+{"kind":"Event","apiVersion":"audit.k8s.io/v1","level":"Metadata","auditID":"[UUID_REDACTED]","stage":"ResponseComplete",
+"requestURI":"/api/v1/namespaces/default/secrets","verb":"create",
+"user":{"username":"[EMAIL_REDACTED]","groups":["system:authenticated"]},
+"sourceIPs":["[IPV4_REDACTED]","[IPV6_REDACTED]"],
+"responseStatus":{"code":201},
+"annotations":{"authorization.k8s.io/decision":"allow"},
+"requestObject":{"metadata":{"name":"my-secret"},"data":{"token":"[GITHUB_TOKEN_REDACTED]"}}}

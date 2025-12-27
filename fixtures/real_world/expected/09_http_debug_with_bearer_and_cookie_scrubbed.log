@@ -1,0 +1,7 @@
+POST /api/v1/payments HTTP/1.1
+Host: api.example.com
+X-Correlation-Id: [UUID_REDACTED]
+Authorization: Bearer [JWT_REDACTED]
+Cookie: session_id=[COOKIE_REDACTED]; user=[EMAIL_REDACTED]
+
+{"amount":1999,"currency":"EUR","card_last4":"4242"}

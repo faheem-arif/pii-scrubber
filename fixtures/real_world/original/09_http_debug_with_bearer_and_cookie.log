@@ -1,0 +1,7 @@
+POST /api/v1/payments HTTP/1.1
+Host: api.example.com
+X-Correlation-Id: 9b2c3d4e-5f60-7a8b-9c0d-1e2f3a4b5c6d
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjdXN0b21lci0xMjMiLCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+Cookie: session_id=Hk3V9pQ1yZ7mA0KxN3dL5sT8uR2wX6cV9bN1mQ4pZ7; user=jane.smith@example.com
+
+{"amount":1999,"currency":"EUR","card_last4":"4242"}
