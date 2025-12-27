@@ -4,7 +4,7 @@ import { clampNumber } from "./utils";
 import { sha256Hex } from "./hash";
 
 const DEFAULT_MAX_MATCHES = 5000;
-const MAX_MATCHES_HARD_CAP = 250000;
+const MAX_MATCHES_HARD_CAP = 1000000;
 
 const computeMaxMatches = (textLength: number, provided?: number): number => {
   const sizeBased = Math.ceil(textLength / 20);
