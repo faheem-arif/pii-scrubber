@@ -4,6 +4,13 @@ import { clampNumber } from "./utils";
 import { sha256Hex } from "./hash";
 
 const DEFAULT_MAX_MATCHES = 5000;
+const MAX_MATCHES_HARD_CAP = 1000000;
+
+const computeMaxMatches = (textLength: number, provided?: number): number => {
+  const sizeBased = Math.ceil(textLength / 20);
+  const requested = provided ?? Math.max(DEFAULT_MAX_MATCHES, sizeBased);
+  return clampNumber(requested, 1, MAX_MATCHES_HARD_CAP);
+};
 
 const overlap = (a: CandidateFinding, b: CandidateFinding): boolean =>
   a.start < b.end && a.end > b.start;
@@ -85,12 +92,12 @@ const buildReplacement = (
 export const scrubText = (text: string, options: ScrubOptions): ScrubResult => {
   const keepLast = clampNumber(options.keepLast ?? 0, 0, 64);
   const aggressive = options.aggressive ?? false;
-  const maxMatches = options.maxMatches ?? DEFAULT_MAX_MATCHES;
+  const maxMatches = computeMaxMatches(text.length, options.maxMatches);
   if (options.mode === "hash" && !options.hashSalt) {
     throw new Error("hash mode requires hashSalt");
   }
 
-  const candidates = detectAll(text, { ...options, aggressive, maxMatches });
+  const { candidates, hitLimit } = detectAll(text, { ...options, aggressive, maxMatches });
   const filtered = candidates.filter((finding) =>
     aggressive ? finding.confidence !== "low" : finding.confidence === "high"
   );
@@ -127,10 +134,16 @@ export const scrubText = (text: string, options: ScrubOptions): ScrubResult => {
     byType[finding.type] = (byType[finding.type] ?? 0) + 1;
   }
 
+  const warnings: string[] = [];
+  if (hitLimit) {
+    warnings.push(`Match cap reached (${maxMatches}). Output may be incomplete.`);
+  }
+
   const report: ScrubReport = {
     totalFindings: findings.length,
     byType,
-    findings: findings.map(({ replacement: _replacement, ...rest }) => rest)
+    findings: findings.map(({ replacement: _replacement, ...rest }) => rest),
+    ...(warnings.length ? { warnings } : {})
   };
 
   return {

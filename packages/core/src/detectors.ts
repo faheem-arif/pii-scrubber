@@ -227,15 +227,32 @@ const addKeyValueCandidates = (
   return true;
 };
 
-export const detectAll = (text: string, options: ScrubOptions): CandidateFinding[] => {
+export const detectAll = (
+  text: string,
+  options: ScrubOptions
+): { candidates: CandidateFinding[]; hitLimit: boolean } => {
   const maxMatches = options.maxMatches ?? 5000;
   const candidates: CandidateFinding[] = [];
+  let hitLimit = false;
 
   const privateKeyRegex =
     /-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----[\s\S]+?-----END (?:[A-Z0-9 ]+ )?PRIVATE KEY-----/g;
   for (const match of text.matchAll(privateKeyRegex)) {
-    if (!addCandidate(candidates, candidate("private_key", "pem_private_key", match.index ?? 0, (match.index ?? 0) + match[0].length, "high"), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate(
+          "private_key",
+          "pem_private_key",
+          match.index ?? 0,
+          (match.index ?? 0) + match[0].length,
+          "high"
+        ),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
@@ -248,8 +265,15 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
     if (!decodedHeader || typeof decodedHeader.alg !== "string") {
       continue;
     }
-    if (!addCandidate(candidates, candidate("jwt", "jwt_structural", index, index + value.length, "high"), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate("jwt", "jwt_structural", index, index + value.length, "high"),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
@@ -257,8 +281,15 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
   for (const match of text.matchAll(slackWebhookRegex)) {
     const index = match.index ?? 0;
     const value = match[0];
-    if (!addCandidate(candidates, candidate("slack_webhook", "slack_webhook", index, index + value.length, "high"), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate("slack_webhook", "slack_webhook", index, index + value.length, "high"),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
@@ -273,8 +304,15 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
       if (!hasBoundary(text, index, index + value.length, ALNUM_ALLOWED)) {
         continue;
       }
-      if (!addCandidate(candidates, candidate("github_token", "github_token", index, index + value.length, "high"), maxMatches)) {
-        return candidates;
+      if (
+        !addCandidate(
+          candidates,
+          candidate("github_token", "github_token", index, index + value.length, "high"),
+          maxMatches
+        )
+      ) {
+        hitLimit = true;
+        return { candidates, hitLimit };
       }
     }
   }
@@ -286,27 +324,61 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
     if (!hasBoundary(text, index, index + value.length, ALNUM_ALLOWED)) {
       continue;
     }
-    if (!addCandidate(candidates, candidate("aws_access_key", "aws_access_key", index, index + value.length, "high"), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate("aws_access_key", "aws_access_key", index, index + value.length, "high"),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
   const awsSecretRegex = /AWS_SECRET_ACCESS_KEY\s*=\s*([A-Za-z0-9/+=]{16,})/g;
-  if (!addKeyValueCandidates(text, awsSecretRegex, "aws_secret_access_key", "aws_secret_access_key", candidates, maxMatches)) {
-    return candidates;
+  if (
+    !addKeyValueCandidates(
+      text,
+      awsSecretRegex,
+      "aws_secret_access_key",
+      "aws_secret_access_key",
+      candidates,
+      maxMatches
+    )
+  ) {
+    hitLimit = true;
+    return { candidates, hitLimit };
   }
 
-  const awsSessionRegex = /AWS_SESSION_TOKEN\s*=\s*([A-Za-z0-9/+=]{16,})/g;
-  if (!addKeyValueCandidates(text, awsSessionRegex, "aws_session_token", "aws_session_token", candidates, maxMatches)) {
-    return candidates;
+  const awsSessionRegex = /AWS_SESSION_TOKEN\s*=\s*([A-Za-z0-9/+=_-]{16,})/g;
+  if (
+    !addKeyValueCandidates(
+      text,
+      awsSessionRegex,
+      "aws_session_token",
+      "aws_session_token",
+      candidates,
+      maxMatches
+    )
+  ) {
+    hitLimit = true;
+    return { candidates, hitLimit };
   }
 
   const basicAuthRegex = /https?:\/\/[^/\s:]+:[^/\s@]+@[^/\s]+(?:\/[^\s]*)?/g;
   for (const match of text.matchAll(basicAuthRegex)) {
     const index = match.index ?? 0;
     const value = match[0];
-    if (!addCandidate(candidates, candidate("url_basic_auth", "url_basic_auth", index, index + value.length, "high"), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate("url_basic_auth", "url_basic_auth", index, index + value.length, "high"),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
@@ -317,8 +389,15 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
     if (!hasBoundary(text, index, index + value.length, EMAIL_ALLOWED)) {
       continue;
     }
-    if (!addCandidate(candidates, candidate("email", "email", index, index + value.length, "high"), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate("email", "email", index, index + value.length, "high"),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
@@ -332,8 +411,15 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
     if (!isValidIPv4(value)) {
       continue;
     }
-    if (!addCandidate(candidates, candidate("ipv4", "ipv4", index, index + value.length, "high"), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate("ipv4", "ipv4", index, index + value.length, "high"),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
@@ -350,22 +436,46 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
     if (!isValidIPv6(value)) {
       continue;
     }
-    if (!addCandidate(candidates, candidate("ipv6", "ipv6", index, index + value.length, "high"), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate("ipv6", "ipv6", index, index + value.length, "high"),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
   for (const match of text.matchAll(UUID_REGEX)) {
     const index = match.index ?? 0;
     const value = match[0];
-    if (!addCandidate(candidates, candidate("uuid", "uuid", index, index + value.length, "high"), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate("uuid", "uuid", index, index + value.length, "high"),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
   const passwordRegex = /\b(?:Password|Pwd)\s*=\s*(".*?"|'.*?'|[^;\s]+)/gi;
-  if (!addKeyValueCandidates(text, passwordRegex, "password", "connection_string_password", candidates, maxMatches)) {
-    return candidates;
+  if (
+    !addKeyValueCandidates(
+      text,
+      passwordRegex,
+      "password",
+      "connection_string_password",
+      candidates,
+      maxMatches
+    )
+  ) {
+    hitLimit = true;
+    return { candidates, hitLimit };
   }
 
   const cookieHeaderRegex = /^Cookie:\s*([^\r\n]*)/gmi;
@@ -392,7 +502,8 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
       const start = lineStart + (kvMatch.index ?? 0) + valueOffset;
       const end = start + value.length;
       if (!addCandidate(candidates, candidate("cookie", "cookie_header", start, end, "high"), maxMatches)) {
-        return candidates;
+        hitLimit = true;
+        return { candidates, hitLimit };
       }
     }
   }
@@ -446,10 +557,17 @@ export const detectAll = (text: string, options: ScrubOptions): CandidateFinding
       continue;
     }
 
-    if (!addCandidate(candidates, candidate("generic_secret", "entropy_keyword", index, index + value.length, confidence), maxMatches)) {
-      return candidates;
+    if (
+      !addCandidate(
+        candidates,
+        candidate("generic_secret", "entropy_keyword", index, index + value.length, confidence),
+        maxMatches
+      )
+    ) {
+      hitLimit = true;
+      return { candidates, hitLimit };
     }
   }
 
-  return candidates;
+  return { candidates, hitLimit };
 };
