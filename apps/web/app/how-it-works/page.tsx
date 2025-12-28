@@ -79,7 +79,7 @@ export default function HowItWorksPage() {
 
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           <section className="rounded-3xl border border-[var(--panel-border)] bg-[var(--panel)] p-6 shadow-soft">
-            <h2 className="text-lg font-semibold text-ink">Privacy checklist</h2>
+            <h2 className="text-lg font-semibold text-ink">Safety checklist</h2>
             <ul className="mt-3 space-y-2 text-sm text-slate">
               <li>Keep Aggressive off unless you need extra coverage.</li>
               <li>Use a private salt in Hash mode if you need consistent results over time.</li>

@@ -32,25 +32,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="relative">
         <header className="relative z-20 px-6 pt-6 md:px-12">
-          <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <div className="mx-auto flex max-w-6xl flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Link
               href="/"
-              className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--accent)] px-4 text-sm font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
+              className="inline-flex h-8 items-center justify-center rounded-full bg-[var(--accent)] px-3 text-sm font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition sm:h-9 sm:px-4"
             >
               PII + Secret Scrubber
             </Link>
-            <nav className="flex items-center gap-3 text-xs text-slate">
+            <nav className="flex flex-wrap items-center gap-2 text-xs text-slate sm:gap-3">
               <Link
                 href="/how-it-works"
-                className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--accent)] px-4 text-center font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
+                className="inline-flex h-8 items-center justify-center rounded-full bg-[var(--accent)] px-3 text-center text-[11px] font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition sm:h-9 sm:px-4 sm:text-xs"
               >
                 How it works
+              </Link>
+              <Link
+                href="/privacy"
+                className="inline-flex h-8 items-center justify-center rounded-full bg-[var(--accent)] px-3 text-center text-[11px] font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition sm:h-9 sm:px-4 sm:text-xs"
+              >
+                Privacy
               </Link>
               <a
                 href="https://github.com/faheem-arif/pii-scrubber"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--accent)] px-4 text-center font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition"
+                className="inline-flex h-8 items-center justify-center rounded-full bg-[var(--accent)] px-3 text-center text-[11px] font-semibold leading-none text-ink shadow-soft hover:bg-[var(--accent-dark)] transition sm:h-9 sm:px-4 sm:text-xs"
               >
                 GitHub
               </a>
