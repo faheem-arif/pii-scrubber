@@ -2,7 +2,7 @@
 
 Scrub sensitive data **entirely in your browser** - **no uploads**, **no telemetry**, **no analytics**.
 
-**Live Site:** https://faheem-arif.github.io/pii-scrubber/
+**Live Site:** https://pii-scrubber.faybex.com
 
 > Privacy promise: your input is processed locally (Web Worker). The app does not send your content to any server.
 
@@ -44,7 +44,7 @@ Deterministic detectors (regex + structural validation + entropy heuristics), in
 
 ## Usage (Web)
 
-1. Open the site: https://faheem-arif.github.io/pii-scrubber/
+1. Open the site: https://pii-scrubber.faybex.com
 2. Paste text or drop a file
 3. Choose a mode and click **Scrub**
 4. Download:
